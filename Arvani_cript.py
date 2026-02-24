@@ -1,152 +1,119 @@
-
-# Importa módulo para interagir com o sistema operacional
-import os 
-
-# Importa a biblioteca Streamlit para a interface web interativa
 import streamlit as st
+import random
 
-# Importa a classe groq para se conectar à API da plataforma Groq e acessar o LLM
-from groq import Groq
-
-# Configura a página do Streamlit com título, ícone, layout e estado inicial da sidebar   
+# --- CONFIGURAÇÕES DA PÁGINA ---
 st.set_page_config(
-    page_title="Study Quest",
-    page_icon="📖",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Máquina de Criptografia 12-L",
+    page_icon="🔐",
+    layout="wide"
 )
 
-# Define um prompt de sistema que descreve as regras e comportamentos de IA
-CUSTOM_PROMPT = """
-Você é o "Study Quest", um assistente de IA especialista em estudos, com foco principal em olimpíadas. Sua missão é ajudar estudantes de forma clara, precisa e útil.
+# --- LÓGICA DA CRIPTOGRAFIA (SISTEMA 12 LETRAS) ---
+VOGAIS = "aeiou"
+CONSOANTES = "bcdfghjklmnpqrstvwxyz"
+ALFABETO = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+def gerar_bloco_cvvccv():
+    """Gera o bloco básico de 6 letras: Consoante-Vogal-Vogal-Consoante-Consoante-Vogal"""
+    return (random.choice(CONSOANTES) + random.choice(VOGAIS) + random.choice(VOGAIS) +
+            random.choice(CONSOANTES) + random.choice(CONSOANTES) + random.choice(VOGAIS))
 
-REGRAS DE OPERAÇÃO:
-1.  **Foco em Programação**: Responda apenas a perguntas relacionadas a estudos, datas de olimpíadas.\
- Se o usuário perguntar sobre outro assunto, responda educadamente  que seu foco é esclarecer as dúvidas dos iniciantes.
+@st.cache_data
+def get_mapa_cripto(seed=100):
+    """Gera o dicionário de tradução fixo baseado em uma semente"""
+    random.seed(seed)
+    mapa = {}
+    usados = set()
+    for letra in ALFABETO:
+        while True:
+            # Padrão solicitado: C-V-V-C-C-V + C-V-V-C-C-V (12 letras)
+            codigo = gerar_bloco_cvvccv() + gerar_bloco_cvvccv()
+            if codigo not in usados:
+                mapa[letra] = codigo
+                usados.add(codigo)
+                break
+    return mapa
 
-2.  **Estrutura da Resposta**: Sempre formate suas respostas da seguinte maneira:
-    * **Explicação Clara**: Comece com uma explicação conceitual sobre o tópico perguntado. Seja direto e didático.
-    * **Exemplo de Código**: Forneça um ou mais blocos de códigos em Python com a sintaxe correta. O código de ser bem comentado para explicar as partes importantes.
-    * **Detalhes do Código**: Após o bloco de código, descreva em detalhes o que cada parte do código faz, explicando a lógica e as funções utilizadas.
-    * **Documentação de Referência**: Ao final, inclua uma seção chamada "📚Documentação de Referência" com um link direto e relevante para a documentação oficial da Linguagem Python e oficial da Linguagem C# e Unity \
-    (docs.python.org), (https://learn.microsoft.com/pt-br/dotnet/csharp/tour-of-csharp/), (https://learn.microsoft.com/pt-br/dotnet/csharp/),(https://docs.unity.com/en-us) ou da Bilioteca em questão.
-3.  **Clareza e Precisão**: Use um linguagem clara. Evite jargões desnecessários. Suas respostas devem ser tecnicamente precisas.
-"""
+MAPA_LETRAS = get_mapa_cripto()
+MAPA_REVERSO = {v: k for k, v in MAPA_LETRAS.items()}
 
-# Cria o conteúdo da barra lateral no Streamlit
-with st.sidebar:
+def codificar(texto):
+    resultado = []
+    for char in texto.upper():
+        if char in MAPA_LETRAS:
+            resultado.append(MAPA_LETRAS[char])
+        elif char == " ":
+            resultado.append("[ESPACO]")
+        else:
+            resultado.append(char)
+    return "-".join(resultado)
 
-    # Define o título da barra lateral
-    st.title("📖Study Quest")
+def decodificar(codigo_bruto):
+    resultado = []
+    # Divide pelos hífens para identificar cada letra de 12 caracteres
+    blocos = codigo_bruto.split("-")
+    for bloco in blocos:
+        bloco = bloco.strip()
+        if bloco in MAPA_REVERSO:
+            resultado.append(MAPA_REVERSO[bloco])
+        elif bloco == "[ESPACO]":
+            resultado.append(" ")
+        else:
+            resultado.append(bloco)
+    return "".join(resultado)
 
-    # Mostra um texto explicativo sobre o assistente
-    st.markdown("Um assistente de IA focado em programação Python e C# com aplicações em jogos da Unity para ajudar iniciantes.")
+# --- INTERFACE STREAMLIT ---
+st.title("🔐 Máquina de Criptografia Poop Company")
+st.write("Converta textos em códigos silábicos de 12 letras baseados no padrão **C-V-V-C-C-V-C-V-V-C-C-V**.")
 
-    # Campo para inserir  a chave de API da Groq
-    groq_api_key = st.text_input(
-        "Insira usa API Key Groq",
-        type="password",
-        help="Obtenha sua chave em https://console.groq.com/keys"
-    )
+st.divider()
 
-    # Adiciona linhas divisórias e explicações extras na barra lateral
-    st.markdown("---")
-    st.markdown("Desenvolvido para auxiliar em suas dúvidas de programação com Linguagem Python e C#. AI pode cometer erros. Sempre verifique suas respostas.")
+col1, col2 = st.columns(2)
 
-    st.markdown("---")
-    st.markdown("Feito por Luis Henrique Arvani")
- 
-    # Título principal do App
-    st.title("Poop Company - Cat AI Coder")
+with col1:
+    st.header("📥 Codificar")
+    texto_para_codificar = st.text_area("Texto original:", placeholder="Digite sua mensagem...", key="input_orig")
+    
+    if st.button("Gerar Código", type="primary"):
+        if texto_para_codificar:
+            resultado_cod = codificar(texto_para_codificar)
+            st.subheader("Código Gerado:")
+            st.code(resultado_cod, language="text")
+        else:
+            st.warning("Escreva algo para codificar.")
 
-    # Subtítulo adicional
-    st.title("Assistente Pessoal de Programação Python e C#")
+with col2:
+    st.header("📤 Decodificar")
+    codigo_para_decodificar = st.text_area("Código secreto:", placeholder="Cole os blocos com hífens aqui...", key="input_cipher")
+    
+    if st.button("Traduzir para Texto"):
+        if codigo_para_decodificar:
+            resultado_dec = decodificar(codigo_para_decodificar)
+            st.subheader("Mensagem Revelada:")
+            st.success(resultado_dec)
+        else:
+            st.warning("Cole um código para traduzir.")
 
-    # Texto auxiliar abaixo do título
-    st.caption("Faça sua pergunta sobre a Linguagem Python e C# e obtenha código, explicações e referências.")
+st.divider()
 
-    # Inicializa o histórico de mensagens na sessão, caso ainda não exista
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+# Visualização da Tabela de Tradução
+with st.expander("🔍 Ver Tabela de Equivalência do Alfabeto"):
+    st.write("Esta é a relação atual entre letras e códigos de 12 caracteres:")
+    cols_tabela = st.columns(4)
+    letras = list(MAPA_LETRAS.items())
+    
+    for i, (l, c) in enumerate(letras):
+        target_col = i % 4
+        with cols_tabela[target_col]:
+            st.write(f"**{l}** : `{c}`")
 
-    # Exibe todas as mensagens anteriores armazenadas no estado de sessão
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-# Inicializa a variável do cliente Groq como None
-cliente = None
-
-# Verifica se o usuário forneceu a chave Api do Groq
-if groq_api_key:
-
-    try:
-
-          # Cria cliente Groq com a chave de API fornecida
-          cliente = Groq(api_key = groq_api_key)
-
-    except Exception as e:
-
-            # Exibe erro caso haja problema ao inicializar cliente
-            st.error(f"Erro ao inicializar o cliente Groq: {e}")
-            st.stop()
-
-# Caso não tenha chave, mas já existam mensagens, mostra aviso
-elif st.session_state.messages:
-     st.warning("Por favor, insira sua API Key da Groq na barra lateral para continuar.")
-
-# Captura a entrada do usuário no chat
-if prompt := st.chat_input("Qual sua dúvida sobre Python ou C#?"):
-
-    # Se não houver cliente válido, mostra aviso e para a execução
-    if not cliente:
-        st.warning("Por favor, insira sua API Key da Groq na barra lateral para começar.")
-        st.stop()
-
-    # Armazena a mensagem do usuário no estado da sessão
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    # Prepara mensagens para enviar à API, incluindo prompt de sistema
-    with st.chat_message("user"):
-         st.markdown(prompt)
-
-    messages_for_api = [{"role": "system", "content": CUSTOM_PROMPT}]
-    for msg in st.session_state.messages:
-        messages_for_api.append(msg)
-
-    # Cria a resposta do assistente no chat
-    with st.chat_message("assistant"):
-
-        with st.spinner("Analisando sua pergunta..."):
-
-            try:
-                # Faz a chamada para a API
-                chat_completion = cliente.chat.completions.create(
-                    messages = messages_for_api,
-                    model = "llama-3.3-70b-versatile",
-                    temperature = 0.7,
-                    max_tokens = 2048,
-                )
-
-                cat_ai_resposta = chat_completion.choices[0].message.content
-                st.markdown(cat_ai_resposta)
-
-                # Salva a resposta da IA no histórico
-                st.session_state.messages.append({"role": "assistant", "content": cat_ai_resposta})
-
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao se comunicar com a API da Groq:  {e}")
-
-# Rodapé HTML corrigido
+# Rodapé simples
 st.markdown(
     """
-    <div style="text-align: center; color: gray;">
+    <div style="text-align: center; color: gray; font-size: 0.8em; margin-top: 50px;">
         <hr>
-        <p>Cat AI Coder - Poop Company</p>
+        Poop Company | Desenvolvido por Luis Henrique Arvani
     </div>
     """,
     unsafe_allow_html=True
 )
-
-# Obrigado DSA
