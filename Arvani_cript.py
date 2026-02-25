@@ -64,7 +64,7 @@ def decodificar(codigo_bruto):
 
 # --- INTERFACE STREAMLIT ---
 st.title("🔐 Sphinx Poop Company")
-st.write("Converta textos em códigos silábicos de 12 letras baseados no padrão **C-V-V-C-C-V-C-V-V-C-C-V**.")
+st.write("Converta textos em códigos**.")
 
 st.divider()
 
@@ -117,4 +117,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
