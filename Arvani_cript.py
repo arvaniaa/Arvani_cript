@@ -3,7 +3,7 @@ import random
 
 # --- CONFIGURAÇÕES DA PÁGINA ---
 st.set_page_config(
-    page_title="Máquina de Criptografia 12-L",
+    page_title="Sphinx",
     page_icon="🔐",
     layout="wide"
 )
@@ -63,7 +63,7 @@ def decodificar(codigo_bruto):
     return "".join(resultado)
 
 # --- INTERFACE STREAMLIT ---
-st.title("🔐 Máquina de Criptografia Poop Company")
+st.title("🔐 Sphinx Poop Company")
 st.write("Converta textos em códigos silábicos de 12 letras baseados no padrão **C-V-V-C-C-V-C-V-V-C-C-V**.")
 
 st.divider()
@@ -117,3 +117,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
